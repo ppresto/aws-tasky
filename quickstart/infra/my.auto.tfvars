@@ -1,5 +1,6 @@
 prefix                     = "pp"
 ec2_key_pair_name          = "ppresto-ptfe-dev-key"
+allowed_bastion_cidr_blocks = ["52.119.127.230/32"]
 eks_cluster_version        = "1.27"
 min_consul_version         = "1.17.1"     #Version used when deploying HCP Consul
 consul_version             = "1.17.1-ent" # Version used in helm values for dataplane and self-hosted setups
