@@ -1,11 +1,11 @@
 data "aws_region" "usw2" {}
 data "aws_availability_zones" "usw2" {
-  state    = "available"
+  state = "available"
 }
 data "aws_caller_identity" "usw2" {}
 
 data "aws_iam_policy" "ebscsi-usw2" {
-  name     = "AmazonEBSCSIDriverPolicy"
+  name = "AmazonEBSCSIDriverPolicy"
 }
 
 locals {
@@ -19,8 +19,7 @@ locals {
         "cidr" : "10.15.0.0/20",
         "private_subnets" : ["10.15.1.0/24", "10.15.2.0/24", "10.15.3.0/24"],
         "public_subnets" : ["10.15.11.0/24", "10.15.12.0/24", "10.15.13.0/24"],
-        #"routable_cidr_blocks" : ["10.15.1.0/24", "10.15.2.0/24", "10.15.3.0/24"],
-        "routable_cidr_blocks" : ["10.15.0.0/20"],
+        "routable_cidr_blocks" : ["10.15.0.0/20"]
       },
       "eks" = {
         shared = {
@@ -31,12 +30,8 @@ locals {
           "cluster_endpoint_public_access" : true,
           "eks_min_size" : 1,
           "eks_max_size" : 3,
-          "eks_desired_size" : 1,           # used for pool size
-          "eks_instance_type" : "m5.large", # m5.large(2cpu,8mem), m5.2xlarge(8cpu,32mem)
-          #"service_ipv4_cidr" : "10.17.16.0/24" #Can't overlap with VPC CIDR
-          # "consul_helm_chart_template" : "values-server-sm-apigw.yaml",
-          # "consul_datacenter" : "usw2",
-          # "consul_type" : "server"
+          "eks_desired_size" : 1,          # used for pool size
+          "eks_instance_type" : "m5.large" # m5.large(2cpu,8mem), m5.2xlarge(8cpu,32mem)
         },
       },
       "ec2" = {
@@ -48,7 +43,7 @@ locals {
         "int-mongodb" = {
           "ec2_ssh_key" : var.ec2_key_pair_name,
           "target_subnets" : "private_subnets",
-          "associate_public_ip_address" : true
+          "associate_public_ip_address" : false
         }
       }
     }

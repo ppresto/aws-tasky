@@ -6,6 +6,10 @@ output "ec2_ip" {
   description = "Public IP address of bastion"
 }
 
+output "ec2_ip_private" {
+  value       = aws_instance.ec2.private_ip
+  description = "Private IP"
+}
 output "ec2_dns" {
   value       = aws_instance.ec2.public_ip != "" ? aws_instance.ec2.public_dns : aws_instance.ec2.private_dns
   description = "DNS address of host"

@@ -81,6 +81,12 @@ variable "allowed_bastion_cidr_blocks" {
   default     = ["0.0.0.0/0"]
 }
 
+# variable "egress_cidr_blocks" {
+#   description = "Allowed egress CIDR blocks. Defaults to Everywhere."
+#   type        = list(string)
+#   default     = ["0.0.0.0/0"]
+# }
+
 locals {
   region_shortname = join("", regex("([a-z]{2}).*-([a-z]).*-(\\d+)", data.aws_region.current.name))
 }

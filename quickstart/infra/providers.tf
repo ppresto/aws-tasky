@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 provider "aws" {
-  alias = "usw2"
+  alias  = "usw2"
   region = "us-west-2"
 }
 terraform {
@@ -27,4 +27,15 @@ terraform {
       version = ">= 1.14.0"
     }
   }
+}
+
+data "aws_eks_cluster_auth" "cluster_auth" {
+  name = module.eks-usw2.cluster_name
+}
+
+provider "kubectl" {
+  host                   = module.eks-usw2.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks-usw2.cluster_certificate_authority_data)
+  token                  = data.aws_eks_cluster_auth.cluster_auth.token
+  load_config_file       = false
 }

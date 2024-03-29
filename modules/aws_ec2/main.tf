@@ -18,7 +18,7 @@ resource "aws_instance" "ec2" {
   vpc_security_group_ids      = concat([aws_security_group.bastion.id], var.security_group_ids)
   subnet_id                   = var.subnet_id
   associate_public_ip_address = var.associate_public_ip_address
-  user_data                   = templatefile("${path.module}/templates/mongo-systemd.sh",
+  user_data                   = templatefile("${path.module}/templates/mongo.sh",
     {
       BUCKET_NAME     = var.bucket_name
   })
@@ -49,13 +49,13 @@ resource "aws_security_group_rule" "bastion_allow_22" {
   description       = "Allow SSH traffic."
 }
 
-resource "aws_security_group_rule" "bastion_allow_outbound" {
-  security_group_id = aws_security_group.bastion.id
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  cidr_blocks       = ["0.0.0.0/0"]
-  ipv6_cidr_blocks  = length(var.allowed_bastion_cidr_blocks_ipv6) > 0 ? ["::/0"] : null
-  description       = "Allow any outbound traffic."
-}
+# resource "aws_security_group_rule" "bastion_allow_outbound" {
+#   security_group_id = aws_security_group.bastion.id
+#   type              = "egress"
+#   protocol          = "-1"
+#   from_port         = 0
+#   to_port           = 0
+#   cidr_blocks       = var.egress_cidr_blocks
+#   ipv6_cidr_blocks  = length(var.allowed_bastion_cidr_blocks_ipv6) > 0 ? ["::/0"] : null
+#   description       = "Allow any outbound traffic."
+# }

@@ -25,6 +25,6 @@ resource "aws_security_group_rule" "all-outbound" {
   protocol          = "-1"
   from_port         = 0
   to_port           = 0
-  cidr_blocks       = var.vpc_cidr_blocks
+  cidr_blocks       = ["0.0.0.0/0"]
   description       = "Egress all traffic"
 }
