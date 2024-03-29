@@ -1,4 +1,11 @@
+provider "aws" {
+  region = "us-west-2"
+}
 
+provider "aws" {
+  alias  = "usw2"
+  region = "us-west-2"
+}
 terraform {
   required_version = ">= 1.3.7"
 
@@ -6,14 +13,6 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 4.51.0"
-    }
-    consul = {
-      source  = "hashicorp/consul"
-      version = "~> 2.17.0"
-    }
-    hcp = {
-      source  = "hashicorp/hcp"
-      version = "~> 0.53.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -30,15 +29,13 @@ terraform {
   }
 }
 
-provider "aws" {
-  alias  = "usw2"
-  region = "us-west-2"
+data "aws_eks_cluster_auth" "cluster_auth" {
+  name = module.eks-usw2.cluster_name
 }
 
-# Required to setup policies/tokens for EC2 services
-provider "consul" {
-  alias      = "usw2"
-  address    = module.hcp_consul_usw2[local.hvn_list_usw2[0]].consul_public_endpoint_url
-  datacenter = module.hcp_consul_usw2[local.hvn_list_usw2[0]].datacenter
-  token      = module.hcp_consul_usw2[local.hvn_list_usw2[0]].consul_root_token_secret_id
+provider "kubectl" {
+  host                   = module.eks-usw2.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks-usw2.cluster_certificate_authority_data)
+  token                  = data.aws_eks_cluster_auth.cluster_auth.token
+  load_config_file       = false
 }

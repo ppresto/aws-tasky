@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tasky
+  namespace: tasky
+  labels:
+    app: tasky
+    version: v1
+    service: tasky
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tasky
+  template:
+    metadata:
+      namespace: tasky
+      labels:
+        app: tasky
+        service: tasky
+    spec:
+      serviceAccountName: tasky
+      containers:
+        - name: tasky
+          #image: joshwolfer/tasky:v1.1
+          image: ppresto/tasky:latest
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN", "SYS_TIME"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: 'MONGODB_URI'
+              value: 'mongodb://admin:D0ntHackMePls!@ext-mongodb.private.ppresto.corp:27017'
+            - name: 'SECRET_KEY'
+              value: 'secret123'

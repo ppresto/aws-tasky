@@ -1,5 +1,5 @@
-# aws-consul-pd
-This repo will build the required AWS Networking and resources to run a 3 tiered MongoDB app.  This includes EC2, EKS, S3, and AWS Config.
+# aws-tasky
+This repo will build all required AWS Networking and resources to run a 3 tiered MongoDB app.  This includes EC2, EKS, S3, Route53, and AWS Config.
 
 This environment will address the following security use cases below.
 * [configuration](https://github.com/ppresto/aws-consul-pd/blob/main/README_Consul_Failover.md)
@@ -18,7 +18,7 @@ This environment will address the following security use cases below.
 ```
 cd quickstart/infra
 ```
-Update the `my.auto.tfvars` for your environment.  Configure your existing AWS Key Pair that is present in both target regions (**us-west-2, us-east-1**) or copy a local SSH key to all your available regions using this script `./scripts/push-aws-sshkey-multiregion.sh`. Review the prefix being used for resource names, the EKS version, and Consul version. 
+Update the `my.auto.tfvars` for your environment.  Configure your existing AWS Key Pair or copy a local SSH key to your region using this script `./scripts/push-aws-sshkey-multiregion.sh`. Review the prefix being used for resource names, the EKS version, private zone name for route53, and external  CIDR for SSH access. 
 
 ### Provision Infrastructure
 Use terraform to build the required AWS Infrastructure
@@ -26,7 +26,24 @@ Use terraform to build the required AWS Infrastructure
 terraform init
 terraform apply -auto-approve
 ```
-**The initial apply might fail** and require multiple applies to properly setup transit gateways across 2 regions, peer them, and establish routes.
+All AWS resources have been provisioned and configured to support the tasky application.
+
+### Resource Overview
+
+#### VPC - public/private subnets
+#### EC2
+  * Route 53 Alias to EC2 IP
+  * External SSH access to 0.0.0.0/0
+  * IAM Profile - 
+  * SG
+  * S3 Bucket
+
+#### EC2 - MongoDB
+#### EKS Cluster and AWS Loadbalancer controller have been installed
+The EKS 1.27 Cluster is running in the private subnet.  The AWS LB controller was installed to support internal NLB or ALBs to EKS services.  This repo is adding the required tags to public and private subnets in order for the LB to properly discover EKS services.  This repo installed the AWS LB Controller using the following steps:
+* Create the EKS Cluster Role: load-balancer-controller
+* Create the SA: aws-load-balancer-controller
+* Install Helm chart: aws-load-balancer-controller
 
 ### Connect to EKS clusters
 Connect to EKS using `scripts/kubectl_connect_eks.sh`.  Pass this script the path to the terraform state file used to provision the EKS cluster.  If cwd is ./infra like above then this command would look like the following:
@@ -35,35 +52,17 @@ source ../../scripts/kubectl_connect_eks.sh .
 ```
 This script connects EKS and builds some useful aliases shown in the output.
 
-### Install AWS Loadbalancer controller on EKS
-This AWS LB controller is required to map internal NLB or ALBs to kubernetes services.  The helm templates used to install consul will attempt to leverage this controller.  This repo is adding the required tags to public and private subnets in order for the LB to properly discover them.  After connecting to the EKS clusters run this script.
-
-```
-../../scripts/install_awslb_controller.sh .
+### Get Ingress URL
 ```
 
-### Install Consul
-This terraform configuration will run helm to install Consul and create the full helm values.yaml file for reference or to use when making future modifications.  Disable the consul dataplane install on the 3rd K8s cluster which is only needed for testing namespace migration.
-```
-cd consul_helm_values
-mv auto-pagerduty-shared-usw2new.tf auto-pagerduty-shared-usw2new.tf.dis
-terraform init
-terraform apply -auto-approve
-```
-An example consul helm values can be found [here]((https://github.com/ppresto/aws-consul-pd/blob/main/quickstart/infra/consul_helm_values/yaml/ex-values-server.yaml)).
-
-### Login to the Consul UI
-Connect to the EKS cluster running the consul server you want to access (usw2 | use1)
-```
-usw2  #alias created by the connect script to switch context to the usw2 eks cluster
 ```
 
-Next, run the following script to get the external LB URL and Consul Root Token to login.
+## Tasky Container
+* why does it have a shell and package manager?
+* why does it have root permissions?
 ```
-cd ..
-../../scripts/setConsulEnv.sh
+apk add tcpdump
 ```
-
 
 ## Next Steps
 Once the EKS infrastructure is ready, and Consul is deployed it's time to build the service mesh.  A good starting place is to deploy the Consul API Gateway with fake-service.  This will create an ingress into the service mesh with a test service that is designed to validate service mesh traffic management use cases. Once this is setup validate the various use cases.
