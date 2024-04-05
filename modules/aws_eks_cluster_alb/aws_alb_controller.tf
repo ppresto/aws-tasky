@@ -12,7 +12,7 @@ module "lb_irsa" {
       namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
     }
   }
-  depends_on = [ module.eks ]
+  depends_on = [module.eks]
 }
 
 # The below section requires the correct kubernetes and helm providers to be setup.
@@ -35,7 +35,7 @@ resource "kubernetes_service_account" "lb_controller" {
       "eks.amazonaws.com/role-arn" = module.lb_irsa.iam_role_arn
     }
   }
-  depends_on = [ module.eks ]
+  depends_on = [module.eks]
 }
 
 resource "helm_release" "lb_controller" {

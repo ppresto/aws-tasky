@@ -32,7 +32,7 @@ module "myvpc" {
     Owner     = "${var.prefix}"
   }
   private_subnet_tags = {
-    Tier                                                                                       = "Private"
+    Tier = "Private"
     # "kubernetes.io/role/internal-elb"                                                          = 1
     # "kubernetes.io/cluster/${try(local.usw2.usw2-shared.eks.shared.cluster_name, var.prefix)}" = "shared"
   }

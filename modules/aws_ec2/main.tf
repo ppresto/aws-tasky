@@ -6,7 +6,7 @@ data "aws_ssm_parameter" "ubuntu_1804_ami_id" {
 }
 
 data "aws_ssm_parameter" "ubuntu-focal" {
-    name = "/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id"
+  name = "/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id"
 }
 
 resource "aws_instance" "ec2" {
@@ -18,9 +18,9 @@ resource "aws_instance" "ec2" {
   vpc_security_group_ids      = concat([aws_security_group.bastion.id], var.security_group_ids)
   subnet_id                   = var.subnet_id
   associate_public_ip_address = var.associate_public_ip_address
-  user_data                   = templatefile("${path.module}/templates/mongo.sh",
+  user_data = templatefile("${path.module}/templates/mongo.sh",
     {
-      BUCKET_NAME     = var.bucket_name
+      BUCKET_NAME = var.bucket_name
   })
   tags = merge(
     { "Name" = "${var.hostname}" },

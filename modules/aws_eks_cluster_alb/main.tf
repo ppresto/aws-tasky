@@ -10,16 +10,16 @@ module "eks" {
   version = "20.8.4"
   #version = "19.10.0"
 
-  cluster_name                    = var.cluster_name
-  cluster_version                 = var.cluster_version
-  cluster_endpoint_private_access = var.cluster_endpoint_private_access
-  cluster_endpoint_public_access  = var.cluster_endpoint_public_access
-  cluster_service_ipv4_cidr       = var.cluster_service_ipv4_cidr
-  vpc_id                          = var.vpc_id
-  subnet_ids                      = var.subnet_ids
+  cluster_name                             = var.cluster_name
+  cluster_version                          = var.cluster_version
+  cluster_endpoint_private_access          = var.cluster_endpoint_private_access
+  cluster_endpoint_public_access           = var.cluster_endpoint_public_access
+  cluster_service_ipv4_cidr                = var.cluster_service_ipv4_cidr
+  vpc_id                                   = var.vpc_id
+  subnet_ids                               = var.subnet_ids
   enable_cluster_creator_admin_permissions = true
-  authentication_mode             = "API_AND_CONFIG_MAP"
-  
+  authentication_mode                      = "API_AND_CONFIG_MAP"
+
   access_entries = {
     # One access entry with a policy associated
     test-admin = {

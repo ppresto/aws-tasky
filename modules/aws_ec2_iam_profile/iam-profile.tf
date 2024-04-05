@@ -1,5 +1,5 @@
 resource "aws_iam_role" "ec2_role" {
-  name = var.role_name
+  name               = var.role_name
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -20,8 +20,8 @@ EOF
   }
 }
 resource "aws_iam_role_policy" "ec2" {
-  name = "${var.role_name}-ec2_policy"
-  role = aws_iam_role.ec2_role.id
+  name   = "${var.role_name}-ec2_policy"
+  role   = aws_iam_role.ec2_role.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -37,8 +37,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "s3" {
-  name = "${var.role_name}-s3_policy"
-  role = aws_iam_role.ec2_role.id
+  name   = "${var.role_name}-s3_policy"
+  role   = aws_iam_role.ec2_role.id
   policy = <<EOF
 {
   "Version": "2012-10-17",

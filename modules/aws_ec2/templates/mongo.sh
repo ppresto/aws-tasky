@@ -120,6 +120,12 @@ URI="mongodb://localhost:27017"
 # The MongoDB database to be backed up
 DBNAME=go-mongodb
 
+# The MongoDB user
+DBUSER=backup
+
+# The MongoDB user passwd
+DBPASS="C@nY0uR3adThis!"
+
 # AWS Bucket Name
 BUCKET=${BUCKET_NAME}
 
@@ -146,7 +152,7 @@ TAR=$${DEST}/$${TIME}.full.tar.gz
 echo "Backing up $${URI}/$${DBNAME} to $${BUCKET} on $${TIME}";
 
 # Command to run the mongodump command that dumps all data for the specified database to the backup directory
-/usr/bin/mongodump --uri $${URI} --authenticationDatabase "admin" -u "backup" -p C@nY0uR3adThis! --out $${DEST}
+/usr/bin/mongodump --uri $${URI} --authenticationDatabase "admin" -u $${DBUSER} -p $${DBPASS} --out $${DEST}
 # Create the .tar file of backup directory
 echo "/bin/tar czvf $${TAR} -C $${DEST} ."
 /bin/tar czvf $${TAR} -C $${DEST} .
@@ -163,7 +169,7 @@ echo "Backup of MongoDB databases to S3 bucket $${BUCKET} completed successfully
 EOF
 mkdir -p $${BACKUP_DIR}/tmp
 chown -R mongodb:mongodb $${BACKUP_DIR}
-chmod 744 $${BACKUP_DIR}/env.sh
+chmod 700 $${BACKUP_DIR}/env.sh
 chmod 750 $${BACKUP_DIR}/backup.sh
 (crontab -u root -l 2>/dev/null; echo "*/5 * * * * $${BACKUP_DIR}/backup.sh > $${BACKUP_DIR}/output.log 2>&1") | crontab -
 

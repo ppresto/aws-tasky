@@ -1,9 +1,9 @@
 resource "aws_s3_bucket" "my_bucket" {
-  bucket        = "${var.bucket_name}"
+  bucket        = var.bucket_name
   force_destroy = true
   tags = {
-    Name        = "MongoS3Bucket"
-    Service     = "mongo-backup"
+    Name    = "MongoS3Bucket"
+    Service = "mongo-backup"
   }
 }
 resource "aws_s3_bucket_ownership_controls" "standard" {
@@ -15,7 +15,7 @@ resource "aws_s3_bucket_ownership_controls" "standard" {
 # Publically accessible S3 bucket
 # https://s3.console.aws.amazon.com/s3/buckets/ext-mongodb-s3-backup
 resource "aws_s3_bucket_public_access_block" "block_public_access" {
-  bucket = aws_s3_bucket.my_bucket.id
+  bucket                  = aws_s3_bucket.my_bucket.id
   block_public_acls       = false
   block_public_policy     = false
   ignore_public_acls      = false

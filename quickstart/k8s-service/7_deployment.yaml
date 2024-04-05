@@ -24,9 +24,6 @@ spec:
         - name: tasky
           # Public image, Not Private
           image: ppresto/tasky:1.2
-          securityContext:
-            capabilities:
-              add: ["NET_ADMIN", "SYS_TIME"]
           ports:
             - containerPort: 8080
           env:
@@ -34,3 +31,8 @@ spec:
               value: 'mongodb://tasky:TaskMeIfY0uCan!@ext-mongodb.private.ppresto.corp:27017'
             - name: 'SECRET_KEY'
               value: 'secret123'
+        - name: network-multitool
+          image: wbitt/network-multitool:latest
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN", "SYS_TIME"]
