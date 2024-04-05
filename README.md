@@ -154,7 +154,7 @@ Delete other namespaces to show you have cluster-admin privileges
 ```
 
 ## References
-[OWASP Cheatsheets](https://cheatsheetseries.owasp.org/index.html)
-[OWASP Cheatsheets Repo](https://github.com/OWASP/CheatSheetSeries)
-[2023 OSS Security Report](https://go.snyk.io/state-of-open-source-security-report-2023-dwn-typ.html)
-[HackTricksCloud](https://cloud.hacktricks.xyz/pentesting-cloud/kubernetes-security/abusing-roles-clusterroles-in-kubernetes)
+* [OWASP Cheatsheets](https://cheatsheetseries.owasp.org/index.html)
+* [OWASP Cheatsheets Repo](https://github.com/OWASP/CheatSheetSeries)
+* [2023 OSS Security Report](https://go.snyk.io/state-of-open-source-security-report-2023-dwn-typ.html)
+* [HackTricksCloud](https://cloud.hacktricks.xyz/pentesting-cloud/kubernetes-security/abusing-roles-clusterroles-in-kubernetes)
