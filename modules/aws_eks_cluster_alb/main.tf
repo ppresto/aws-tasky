@@ -7,7 +7,8 @@ data "aws_iam_policy" "ebscsi" {
 module "eks" {
   # https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
   source  = "terraform-aws-modules/eks/aws"
-  version = "19.10.0"
+  version = "20.8.4"
+  #version = "19.10.0"
 
   cluster_name                    = var.cluster_name
   cluster_version                 = var.cluster_version
@@ -16,7 +17,25 @@ module "eks" {
   cluster_service_ipv4_cidr       = var.cluster_service_ipv4_cidr
   vpc_id                          = var.vpc_id
   subnet_ids                      = var.subnet_ids
-  #control_plane_subnet_ids              = var.subnet_ids
+  enable_cluster_creator_admin_permissions = true
+  authentication_mode             = "API_AND_CONFIG_MAP"
+  
+  access_entries = {
+    # One access entry with a policy associated
+    test-admin = {
+      kubernetes_groups = [""]
+      principal_arn     = "arn:aws:iam::729755634065:role/aws_ppresto_test-admin"
+
+      policy_associations = {
+        first = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+  }
   cluster_addons = {
     #coredns = {
     #  resolve_conflicts = "OVERWRITE"
@@ -32,6 +51,9 @@ module "eks" {
       most_recent = true
       #service_account_role_arn = data.aws_iam_policy.ebscsi.arn
       #addon_version = "v1.21.0-eksbuild.1"
+    }
+    eks-pod-identity-agent = {
+      most_recent = true
     }
   }
   create_kms_key = true
@@ -88,66 +110,5 @@ module "eks" {
       max_size     = var.max_size
       desired_size = var.desired_size
     }
-  }
-}
-
-# Create AWS LoadBalancer Controller IAM Policy and Role for EKS cluster.
-# Role
-# arn:aws:iam::729755634065:role/${module.eks.cluster_name}-load-balancer-controller
-module "lb_irsa" {
-  source                                 = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  role_name                              = "${module.eks.cluster_name}-load-balancer-controller"
-  attach_load_balancer_controller_policy = true
-
-  oidc_providers = {
-    main = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
-    }
-  }
-}
-
-# The below section requires the correct kubernetes and helm providers to be setup.
-# Providers can't be dynamically configured to support multiple eks clusters so code below is disabled.
-# Instead use ./scripts/install_awslb_controller.sh to install the AWS LB controller in all eks clusters.
-#
-# ./scripts/install_awslb_controller.sh
-# - Creates AWS LB Controller service account
-# - Applys the above IAM role to the service account
-# - Uses Helm to install the AWS LB controller with the sa
-
-resource "kubernetes_service_account" "lb_controller" {
-  metadata {
-    name      = "aws-load-balancer-controller"
-    namespace = "kube-system"
-    labels = {
-      "app.kubernetes.io/component" = "controller"
-      "app.kubernetes.io/name"      = "aws-load-balancer-controller"
-    }
-    annotations = {
-      "eks.amazonaws.com/role-arn" = module.lb_irsa.iam_role_arn
-    }
-  }
-}
-
-resource "helm_release" "lb_controller" {
-  name       = "aws-load-balancer-controller"
-  repository = "https://aws.github.io/eks-charts"
-  chart      = "aws-load-balancer-controller"
-  namespace  = "kube-system"
-
-  set {
-    name  = "clusterName"
-    value = var.cluster_name
-  }
-
-  set {
-    name  = "serviceAccount.create"
-    value = false
-  }
-
-  set {
-    name  = "serviceAccount.name"
-    value = kubernetes_service_account.lb_controller.metadata[0].name
   }
 }

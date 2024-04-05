@@ -1,11 +1,11 @@
 # Create usw2 VPCs defined in local.usw2
-module "vpc-usw2" {
+module "myvpc" {
   # https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
   providers = {
     aws = aws.usw2
   }
   source                   = "terraform-aws-modules/vpc/aws"
-  version                  = "~> 3.0"
+  version                  = "~> 5.7.0"
   for_each                 = local.usw2
   name                     = try(local.usw2[each.key].vpc.name, "${var.prefix}-${each.key}-vpc")
   cidr                     = local.usw2[each.key].vpc.cidr
@@ -33,8 +33,8 @@ module "vpc-usw2" {
   }
   private_subnet_tags = {
     Tier                                                                                       = "Private"
-    "kubernetes.io/role/internal-elb"                                                          = 1
-    "kubernetes.io/cluster/${try(local.usw2.usw2-shared.eks.shared.cluster_name, var.prefix)}" = "shared"
+    # "kubernetes.io/role/internal-elb"                                                          = 1
+    # "kubernetes.io/cluster/${try(local.usw2.usw2-shared.eks.shared.cluster_name, var.prefix)}" = "shared"
   }
   public_subnet_tags = {
     Tier                                                                                     = "Public"
@@ -51,7 +51,7 @@ module "vpc-usw2" {
     Name = "${var.prefix}-vpc1-public"
   }
 }
-module "aws-ec2-usw2" {
+module "ec2" {
   providers = {
     aws = aws.usw2
   }
@@ -60,35 +60,35 @@ module "aws-ec2-usw2" {
 
   hostname                    = local.ec2_map_usw2[each.key].hostname
   ec2_key_pair_name           = local.ec2_map_usw2[each.key].ec2_ssh_key
-  vpc_id                      = module.vpc-usw2[each.value.vpc_env].vpc_id
+  vpc_id                      = module.myvpc[each.value.vpc_env].vpc_id
   prefix                      = var.prefix
   associate_public_ip_address = each.value.associate_public_ip_address
-  subnet_id                   = each.value.target_subnets == "public_subnets" ? module.vpc-usw2[each.value.vpc_env].public_subnets[0] : module.vpc-usw2[each.value.vpc_env].private_subnets[0]
-  security_group_ids          = [module.sg-mongod-usw2[each.value.vpc_env].securitygroup_id]
+  subnet_id                   = each.value.target_subnets == "public_subnets" ? module.myvpc[each.value.vpc_env].public_subnets[0] : module.myvpc[each.value.vpc_env].private_subnets[0]
+  security_group_ids          = [module.ec2-sg-mongo[each.value.vpc_env].securitygroup_id]
   instance_profile_name       = module.ec2_profile_mongo[each.key].instance_profile_name
   allowed_bastion_cidr_blocks = var.allowed_bastion_cidr_blocks
-  bucket_name                 = module.mongod-s3-backup[each.key].bucket_name
+  bucket_name                 = module.s3-mongo[each.key].bucket_name
 }
 
-module "ec2_route53_zone" {
+module "route53_zone" {
   providers = {
     aws = aws.usw2
   }
-  source       = "../../modules/aws_ec2_route53_zone"
+  source       = "../../modules/aws_route53_zone"
   for_each     = { for k, v in local.usw2 : k => v if contains(keys(v), "vpc") }
-  vpc_id       = module.vpc-usw2[each.key].vpc_id
+  vpc_id       = module.myvpc[each.key].vpc_id
   route53_zone = var.route53_zone
 }
-module "ec2_route53_record" {
+module "route53_record" {
   providers = {
     aws = aws.usw2
   }
   for_each              = local.ec2_map_usw2
-  source                = "../../modules/aws_ec2_route53_record"
-  route53_zone_id       = module.ec2_route53_zone["usw2-shared"].zone_id
+  source                = "../../modules/aws_route53_record"
+  route53_zone_id       = module.route53_zone["usw2-shared"].zone_id
   route53_zone          = var.route53_zone
   route53_record_prefix = each.value.hostname
-  route53_record_ip     = module.aws-ec2-usw2[each.key].ec2_ip_private
+  route53_record_ip     = module.ec2[each.key].ec2_ip_private
 }
 module "ec2_profile_mongo" {
   providers = {
@@ -97,9 +97,9 @@ module "ec2_profile_mongo" {
   for_each      = local.ec2_map_usw2
   source        = "../../modules/aws_ec2_iam_profile"
   role_name     = "${each.value.hostname}-ec2-role"
-  s3_bucket_arn = module.mongod-s3-backup[each.key].bucket_arn
+  s3_bucket_arn = module.s3-mongo[each.key].bucket_arn
 }
-module "sg-mongod-usw2" {
+module "ec2-sg-mongo" {
   providers = {
     aws = aws.usw2
   }
@@ -107,12 +107,12 @@ module "sg-mongod-usw2" {
   for_each              = { for k, v in local.usw2 : k => v if contains(keys(v), "ec2") }
   security_group_create = true
   name_prefix           = "${each.key}-ec2-sg"
-  vpc_id                = module.vpc-usw2[each.key].vpc_id
+  vpc_id                = module.myvpc[each.key].vpc_id
   vpc_cidr_blocks       = local.all_routable_cidr_blocks_usw2
   private_cidr_blocks   = local.all_routable_cidr_blocks_usw2
 }
 
-module "mongod-s3-backup" {
+module "s3-mongo" {
   providers = {
     aws = aws.usw2
   }
@@ -131,7 +131,7 @@ module "eks-usw2" {
   providers = {
     aws = aws.usw2
   }
-  source                          = "../../modules/aws_eks_cluster_albcontroller"
+  source                          = "../../modules/aws_eks_cluster_alb"
   cluster_name                    = try(local.usw2["usw2-shared"].eks.shared.cluster_name, local.name)
   cluster_version                 = try(local.usw2["usw2-shared"].eks.shared.eks_cluster_version, var.eks_cluster_version)
   cluster_endpoint_private_access = try(local.usw2["usw2-shared"].eks.shared.cluster_endpoint_private_access, true)
@@ -141,7 +141,7 @@ module "eks-usw2" {
   max_size                        = try(local.usw2["usw2-shared"].eks.shared.eks_max_size, var.eks_max_size)
   desired_size                    = try(local.usw2["usw2-shared"].eks.shared.eks_desired_size, var.eks_desired_size)
   instance_type                   = try(local.usw2["usw2-shared"].eks.shared.eks_instance_type, "m5.large")
-  vpc_id                          = module.vpc-usw2["usw2-shared"].vpc_id
-  subnet_ids                      = module.vpc-usw2["usw2-shared"].private_subnets
+  vpc_id                          = module.myvpc["usw2-shared"].vpc_id
+  subnet_ids                      = module.myvpc["usw2-shared"].private_subnets
   all_routable_cidrs              = local.all_routable_cidr_blocks_usw2
 }

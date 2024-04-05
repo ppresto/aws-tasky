@@ -22,8 +22,8 @@ spec:
       serviceAccountName: tasky
       containers:
         - name: tasky
-          #image: joshwolfer/tasky:v1.1
-          image: ppresto/tasky:latest
+          # Public image, Not Private
+          image: ppresto/tasky:1.2
           securityContext:
             capabilities:
               add: ["NET_ADMIN", "SYS_TIME"]
@@ -31,6 +31,6 @@ spec:
             - containerPort: 8080
           env:
             - name: 'MONGODB_URI'
-              value: 'mongodb://admin:D0ntHackMePls!@ext-mongodb.private.ppresto.corp:27017'
+              value: 'mongodb://tasky:TaskMeIfY0uCan!@ext-mongodb.private.ppresto.corp:27017'
             - name: 'SECRET_KEY'
               value: 'secret123'

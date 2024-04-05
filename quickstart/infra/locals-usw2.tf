@@ -40,11 +40,6 @@ locals {
           "target_subnets" : "public_subnets",
           "associate_public_ip_address" : true
         }
-        "int-mongodb" = {
-          "ec2_ssh_key" : var.ec2_key_pair_name,
-          "target_subnets" : "private_subnets",
-          "associate_public_ip_address" : false
-        }
       }
     }
   }

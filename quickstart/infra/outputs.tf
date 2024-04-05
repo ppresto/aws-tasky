@@ -6,7 +6,7 @@ output "usw2_projects" { # Used by ./scripts/kubectl_connect_eks.sh to loop thro
 }
 # VPC
 output "usw2_vpc_ids" {
-  value = { for env in sort(keys(local.usw2)) : env => module.vpc-usw2[env].vpc_id }
+  value = { for env in sort(keys(local.usw2)) : env => module.myvpc[env].vpc_id }
 }
 
 output "usw2_eks_cluster_endpoints" {
@@ -19,9 +19,13 @@ output "usw2_eks_cluster_names" {
 }
 
 output "usw2_ec2_ip" {
-  value = { for k, v in local.ec2_map_usw2 : k => module.aws-ec2-usw2[k].ec2_ip }
+  value = { for k, v in local.ec2_map_usw2 : k => module.ec2[k].ec2_ip }
 }
 
 output "usw2_ec2_route53_records" {
-  value = { for k, v in local.ec2_map_usw2 : k => module.ec2_route53_record[k].record }
+  value = { for k, v in local.ec2_map_usw2 : k => module.route53_record[k].record }
+}
+
+output "bucket_url" {
+  value = { for k, v in local.ec2_map_usw2 : k => "http://${module.s3-mongo[k].bucket_name}.s3.us-west-2.amazonaws.com" }
 }

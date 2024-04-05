@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: network-multitool
+  namespace: tasky
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: network-multitool
+  namespace: tasky
+spec:
+  selector:
+    app: network-multitool
+  ports:
+    - port: 9091
+      targetPort: 9091
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: network-multitool
+  namespace: tasky
+  labels:
+    app: network-multitool
+    version: v1
+    service: network-multitool
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: network-multitool
+  template:
+    metadata:
+      namespace: tasky
+      labels:
+        app: network-multitool
+        service: network-multitool
+    spec:
+      serviceAccountName: tasky
+      containers:
+        - name: network-multitool
+          image: wbitt/network-multitool:latest
+          # securityContext:
+          #   capabilities:
+          #     add: ["NET_ADMIN", "SYS_TIME"]

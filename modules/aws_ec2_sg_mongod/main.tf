@@ -19,6 +19,8 @@ resource "aws_security_group_rule" "mongoPort" {
   description       = "Mongo DB default port"
 }
 
+# VPC subnet can have a VPC interface endpoint for com.amazonaws.region.s3.
+# Access s3 through AWS privatelink instead of allowing all traffic outbound.
 resource "aws_security_group_rule" "all-outbound" {
   security_group_id = var.security_group_create == true ? aws_security_group.mongo[0].id : var.security_group_id
   type              = "egress"

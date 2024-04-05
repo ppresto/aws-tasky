@@ -33,25 +33,31 @@ use admin
 db.createUser(
   {
     user: "admin",
-    pwd: "D0ntHackMePls!",
+    pwd: "D0ntPwnMePls!",
     roles: [
       { role: "userAdminAnyDatabase", db: "admin" },
       { role: "readWriteAnyDatabase", db: "admin" }
     ]
   }
 )
-
 db.createUser(
   {
     user: "backup",
-    pwd: "D0ntR3adThis!",
+    pwd: "C@nY0uR3adThis!",
     roles: [
-      { role: "read", db: "admin" },
-      { role: "backup", db: "admin"}
+      { role: "backup", db: "admin" }
     ]
   }
 )
-
+db.createUser(
+  {
+    user: "tasky",
+    pwd: "TaskMeIfY0uCan!",
+    roles: [
+      { role: "readWrite", db: "go-mongodb" }
+    ]
+  }
+)
 db.adminCommand( { shutdown: 1 } )
 EOF
 
@@ -112,7 +118,7 @@ cat > $${BACKUP_DIR}/env.sh <<- EOF
 URI="mongodb://localhost:27017"
 
 # The MongoDB database to be backed up
-DBNAME=admin
+DBNAME=go-mongodb
 
 # AWS Bucket Name
 BUCKET=${BUCKET_NAME}
@@ -131,7 +137,7 @@ PATH=$${PATH}:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/
 TIME=`/bin/date +%Y-%m-%d-%H%M`
 
 # Command to create a .tar file of the MongoDB backup files
-TAR=$${DEST}/$${TIME}.tar.gz
+TAR=$${DEST}/$${TIME}.full.tar.gz
 
 # Command to create the backup directory
 /bin/mkdir -p $${DEST}
@@ -140,8 +146,7 @@ TAR=$${DEST}/$${TIME}.tar.gz
 echo "Backing up $${URI}/$${DBNAME} to $${BUCKET} on $${TIME}";
 
 # Command to run the mongodump command that dumps all data for the specified database to the backup directory
-/usr/bin/mongodump --uri $${URI} --authenticationDatabase "admin" -u "admin" -p D0ntHackMePls!  --db $${DBNAME} --out $${DEST}
-
+/usr/bin/mongodump --uri $${URI} --authenticationDatabase "admin" -u "backup" -p C@nY0uR3adThis! --out $${DEST}
 # Create the .tar file of backup directory
 echo "/bin/tar czvf $${TAR} -C $${DEST} ."
 /bin/tar czvf $${TAR} -C $${DEST} .
@@ -151,8 +156,7 @@ echo "aws s3 cp $${TAR} s3://$${BUCKET}/"
 aws s3 cp $${TAR} s3://$${BUCKET}/
 
 # Clean up
-rm -rf $${DEST}/$${DBNAME}
-rm $${DEST}/$${TIME}.tar.gz
+rm -rf $${DEST}/*
 
 # Log the end of the script
 echo "Backup of MongoDB databases to S3 bucket $${BUCKET} completed successfully."
@@ -164,10 +168,10 @@ chmod 750 $${BACKUP_DIR}/backup.sh
 (crontab -u root -l 2>/dev/null; echo "*/5 * * * * $${BACKUP_DIR}/backup.sh > $${BACKUP_DIR}/output.log 2>&1") | crontab -
 
 # Examples:
-# mongosh  --authenticationDatabase "admin" -u "admin" -p D0ntHackMePls!
+# mongosh  --authenticationDatabase "admin" -u "admin" -p D0ntPwnMePls!
 #
 # use admin 
-# db.auth("admin", "D0ntHackMePls!")
+# db.auth("admin", "D0ntPwnMePls!")
 #
-# sudo mongodump --uri mongodb://localhost:27017 --authenticationDatabase "admin" -u "admin" -p D0ntHackMePls!  --db admin --out /opt/mongodb-backups/tmp
+# sudo mongodump --uri mongodb://localhost:27017 --authenticationDatabase "admin" -u "admin" -p D0ntPwnMePls!  --db admin --out /opt/mongodb-backups/tmp
 # aws s3 cp /opt/mongodb-backups/tmp/admin s3://pp-s3-backup/ --recursive

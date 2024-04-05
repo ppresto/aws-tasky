@@ -1,6 +1,13 @@
 #!/bin/bash
-
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+
+# Setup local AWS Env variables
+if [[ -z $1 ]]; then  #Pass path for tfstate dir if not in quickstart.
+output=$(terraform output -state $SCRIPT_DIR/../quickstart/infra/terraform.tfstate -json)
+else
+output=$(terraform output -state ${1}/terraform.tfstate -json)
+fi
+
 PROFILE="assumed-role"
 PROJECTS=($(echo $output | jq -r '. | to_entries[] | select(.key|endswith("_projects")) | .value.value[]'))
 EKS_CLUSTER_NAMES=$(echo $output | jq -r ".| to_entries[] | select(.key|endswith(\"_eks_cluster_names\")) | .value.value | to_entries[] | (.value)")
