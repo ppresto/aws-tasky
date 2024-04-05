@@ -1,6 +1,7 @@
-# Chainguard
-# Lightweight, distroless, hardened images with SBOMs and signatures.
-# Smaller attack surface, and much less likely to have CVEs
+# Chainguard - Lightweight, distroless, hardened images with SBOMs and signatures. Less attack surface and chance of CVEs
+#
+# PreReq: clone the tasky repo - https://github.com/jeffthorne/tasky, then build with this dockerfile.
+#
 
 FROM cgr.dev/chainguard/go:latest AS build
 
