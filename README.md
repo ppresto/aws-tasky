@@ -126,7 +126,6 @@ EC2 Discovery
 Find a public subnet that is routable from the internet and a security group you want to apply to your shadow instance
 ```
 aws ec2 describe-subnets --filters "Name=tag:Tier,Values=Public" | grep SubnetId
-aws ec2 describe-security-group-rules --query 'SecurityGroupRules[].[Description, SecurityGroupRuleId, ToPort, CidrIpv4]' --output table
 aws ec2 describe-security-group-rules --query 'SecurityGroupRules[].[Description, GroupId, ToPort, CidrIpv4]' --output table
 ```
 
@@ -151,7 +150,12 @@ Get the external IP to SSH to the new instance
 ```
 aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId, InstanceType, SubnetId, PublicIpAddress]' --output table
 ```
-
+#### Recap
+* Don't give ec2:* permissions
+* ingress all is bad.  egress all opens you up to reverse shells too!
+* Improvement area
+Setup a VPC interface endpoint for com.amazonaws.region.s3. 
+Access s3 through AWS privatelink instead of allowing all traffic outbound.
 ## Tasky Application - Verify RBAC
 
 ### Tasky image
