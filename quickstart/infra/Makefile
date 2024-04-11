@@ -1,10 +1,10 @@
 .PHONY: fmt clean infra all
 
 all: infra getIngress
-
+scan: pre-scan post-scan
 pre-scan:
 	@trivy image --severity HIGH,CRITICAL ppresto/tasky:1.2
-	@trivy fs --scanners vuln,secret,misconfig ../../ --skip-dirs ".terraform" --report summary
+	@trivy fs --scanners vuln,secret,misconfig ../../ --skip-dirs ".terraform" --report summary | grep -v Failures | egrep "CRITICAL|HIGH" | sort -u
 fmt:
 	@../../scripts/tf_fmt.sh
 infra: fmt

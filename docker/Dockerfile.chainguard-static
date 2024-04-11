@@ -1,4 +1,3 @@
-# Chainguard - Lightweight, distroless, hardened images with SBOMs and signatures. Less attack surface and chance of CVEs
 #
 # PreReq: clone the tasky repo - https://github.com/jeffthorne/tasky, then build with this dockerfile.
 #
